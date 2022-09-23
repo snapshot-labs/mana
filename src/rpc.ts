@@ -8,7 +8,7 @@ import { rpcError, rpcSuccess } from './utils';
 const starknetPrivkey = process.env.STARKNET_PRIVKEY || '';
 const starknetAddress = process.env.STARKNET_ADDRESS || '';
 const client = new StarkNetTx({
-  ethUrl: process.env.ETH_NODE_URL as string
+  ethUrl: process.env.ETH_RPC_URL as string
 });
 const starkKeyPair = ec.getKeyPair(starknetPrivkey);
 const account = new Account(defaultProvider, starknetAddress, starkKeyPair);
