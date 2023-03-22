@@ -1,13 +1,7 @@
 import express from 'express';
-import { Wallet } from '@ethersproject/wallet';
-import { JsonRpcProvider } from '@ethersproject/providers';
 import { clients } from '@snapshot-labs/sx';
-import { rpcError, rpcSuccess } from './utils';
-
-const ethPrivkey = process.env.ETH_PRIVKEY || '';
-const ethRpcUrl = process.env.ETH_RPC_URL || '';
-const provider = new JsonRpcProvider(ethRpcUrl);
-const wallet = new Wallet(ethPrivkey, provider);
+import { wallet } from './dependencies';
+import { rpcError, rpcSuccess } from '../utils';
 
 const client = new clients.EvmEthereumTx();
 
