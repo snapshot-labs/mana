@@ -3,7 +3,6 @@ import express from 'express';
 import cors from 'cors';
 import rpc from './rpc';
 import ethRpc from './eth/rpc';
-import ethRouter from './eth';
 import fossil from './fossil';
 import space from './space';
 import pkg from '../package.json';
@@ -19,9 +18,6 @@ app.use(cors({ maxAge: 86400 }));
 app.use('/', rpc);
 app.use('/fossil', fossil);
 app.use('/space', space);
-
-app.use('/eth', ethRouter);
-// TODO: remove later once all clients are migrated
 app.use('/eth_rpc', ethRpc);
 
 app.get('/', (req, res) =>

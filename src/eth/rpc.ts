@@ -40,7 +40,38 @@ async function send(id, params, res) {
   }
 }
 
-const fn = { send };
+async function execute(id, params, res) {
+  try {
+    const { space, proposalId, executionParams } = params;
+    const receipt = await client.execute({
+      signer: wallet,
+      space,
+      proposal: proposalId,
+      executionParams
+    });
+
+    return rpcSuccess(res, receipt, id);
+  } catch (e) {
+    return rpcError(res, 500, e, id);
+  }
+}
+
+async function executeQueuedProposal(id, params, res) {
+  try {
+    const { executionStrategy, executionParams } = params;
+    const receipt = await client.executeQueuedProposal({
+      signer: wallet,
+      executionStrategy,
+      executionParams
+    });
+
+    return rpcSuccess(res, receipt, id);
+  } catch (e) {
+    return rpcError(res, 500, e, id);
+  }
+}
+
+const fn = { send, execute, executeQueuedProposal };
 
 router.post('/', async (req, res) => {
   const { id, method, params } = req.body;
