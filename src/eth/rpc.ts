@@ -67,9 +67,8 @@ async function execute(id, params, res) {
 
 async function executeQueuedProposal(id, params, res) {
   try {
-    const { executionStrategy, executionParams } = params;
-    // NOTE: this will always use default signer, as there is no space in the params
-    const signer = getWallet('');
+    const { space, executionStrategy, executionParams } = params;
+    const signer = getWallet(space);
 
     const receipt = await client.executeQueuedProposal({
       signer,
