@@ -9,7 +9,7 @@ const addressIndicies = {
 
 export const createWalletProxy = (mnemonic: string, chainId: number) => {
   const signers = new Map<string, NonceManager>();
-  const provider = new StaticJsonRpcProvider(`https://rpc.snapshotx.xyz/${chainId}`);
+  const provider = new StaticJsonRpcProvider(`https://rpc.snapshotx.xyz/${chainId}`, chainId);
 
   return (spaceAddress: string) => {
     const normalizedSpaceAddress = spaceAddress.toLowerCase();
