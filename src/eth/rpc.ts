@@ -17,8 +17,6 @@ export const createNetworkHandler = (chainId: number) => {
   const client = new clients.EvmEthereumTx({ networkConfig: networkConfig });
 
   async function send(id, params, res) {
-    console.log('networkConfig', networkConfig);
-
     try {
       const { signatureData, data } = params.envelope;
       const { types } = signatureData;
@@ -93,5 +91,22 @@ export const createNetworkHandler = (chainId: number) => {
     }
   }
 
-  return { send, execute, executeQueuedProposal };
+  async function vetoProposal(id, params, res) {
+    try {
+      const { space, executionStrategy, executionHash } = params;
+      const signer = getWallet(space);
+
+      const receipt = await client.vetoExecution({
+        signer,
+        executionStrategy,
+        executionHash
+      });
+
+      return rpcSuccess(res, receipt, id);
+    } catch (e) {
+      return rpcError(res, 500, e, id);
+    }
+  }
+
+  return { send, execute, executeQueuedProposal, vetoProposal };
 };
