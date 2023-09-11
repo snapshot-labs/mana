@@ -1,10 +1,10 @@
-import { Provider, Account } from 'starknet';
+import { Provider, Account, constants } from 'starknet';
 import { clients, goerli1, goerli2 } from '@snapshot-labs/sx';
 import { rpcError, rpcSuccess } from '../utils';
 
 export const NETWORKS = {
-  '0x534e5f474f45524c49': goerli1,
-  '0x534e5f474f45524c4932': goerli2
+  [constants.StarknetChainId.SN_GOERLI]: goerli1,
+  [constants.StarknetChainId.SN_GOERLI2]: goerli2
 } as const;
 
 const starknetPrivkey = process.env.STARKNET_PRIVKEY || '';
@@ -15,7 +15,7 @@ export const createNetworkHandler = (chainId: string) => {
   if (!networkConfig) throw new Error('Unsupported chainId');
 
   const baseUrl =
-    chainId === '0x534e5f474f45524c49'
+    chainId === constants.StarknetChainId.SN_GOERLI
       ? 'https://alpha4.starknet.io'
       : 'https://alpha4-2.starknet.io';
 
