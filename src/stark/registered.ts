@@ -66,6 +66,7 @@ export async function registeredTransactionsLoop() {
       await processTransaction(transaction);
     }
 
+    await db.markOldTransactionsAsProcessed();
     await sleep(INTERVAL);
   }
 }

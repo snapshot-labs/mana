@@ -4,11 +4,11 @@ export const REGISTERED_TRANSACTIONS = 'registered_transactions';
 
 export async function createTables() {
   const tableExists = await knex.schema.hasTable(REGISTERED_TRANSACTIONS);
-  if (tableExists) return;
+  if (tableExists) await knex.schema.dropTable(REGISTERED_TRANSACTIONS);
 
   return knex.schema.createTable(REGISTERED_TRANSACTIONS, t => {
     t.increments('id').primary();
-    t.timestamps().defaultTo(knex.fn.now());
+    t.timestamps(true, true);
     t.boolean('processed').defaultTo(false).index();
     t.boolean('failed').defaultTo(false).index();
     t.string('network').index();
@@ -32,5 +32,13 @@ export async function getTransactionsToProcess() {
 }
 
 export async function markTransactionProcessed(id: number, { failed = false } = {}) {
-  return knex(REGISTERED_TRANSACTIONS).update({ processed: true, failed }).where({ id });
+  return knex(REGISTERED_TRANSACTIONS)
+    .update({ updated_at: knex.fn.now(), processed: true, failed })
+    .where({ id });
+}
+
+export async function markOldTransactionsAsProcessed() {
+  return knex(REGISTERED_TRANSACTIONS)
+    .update({ updated_at: knex.fn.now(), processed: true, failed: true })
+    .whereRaw("created_at < now() - interval '1 day'");
 }
