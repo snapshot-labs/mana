@@ -10,6 +10,7 @@ export async function createTables() {
     t.increments('id').primary();
     t.timestamps().defaultTo(knex.fn.now());
     t.boolean('processed').defaultTo(false).index();
+    t.boolean('failed').defaultTo(false).index();
     t.string('network').index();
     t.string('type').index();
     t.string('hash');
@@ -30,6 +31,6 @@ export async function getTransactionsToProcess() {
   return knex(REGISTERED_TRANSACTIONS).select('*').where({ processed: false });
 }
 
-export async function markTransactionProcessed(id: number) {
-  return knex(REGISTERED_TRANSACTIONS).update({ processed: true }).where({ id });
+export async function markTransactionProcessed(id: number, { failed = false } = {}) {
+  return knex(REGISTERED_TRANSACTIONS).update({ processed: true, failed }).where({ id });
 }

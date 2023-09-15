@@ -13,6 +13,8 @@ type Transaction = {
   data: any;
 };
 
+const failedCounter: Record<string, number | undefined> = {};
+
 async function processTransaction(transaction: Transaction) {
   const storageAddress = utils.encoding.getStorageVarAddress('_commits', transaction.hash);
 
@@ -28,19 +30,30 @@ async function processTransaction(transaction: Transaction) {
   };
 
   let receipt;
-  if (transaction.type === 'Propose') {
-    receipt = await client.propose(account, payload);
-  } else if (transaction.type === 'UpdateProposal') {
-    receipt = await client.updateProposal(account, payload);
-  } else if (transaction.type === 'Vote') {
-    receipt = await client.vote(account, payload);
-  } else {
-    console.log('skipped unknown transaction type');
+  try {
+    if (transaction.type === 'Propose') {
+      receipt = await client.propose(account, payload);
+    } else if (transaction.type === 'UpdateProposal') {
+      receipt = await client.updateProposal(account, payload);
+    } else if (transaction.type === 'Vote') {
+      receipt = await client.vote(account, payload);
+    } else {
+      console.log('skipped unknown transaction type');
+    }
+
+    console.log('receipt', receipt);
+  } catch (e) {
+    console.log('error', e);
+
+    failedCounter[transaction.id] = (failedCounter[transaction.id] || 0) + 1;
   }
 
-  console.log('receipt', receipt);
+  const failed = (failedCounter[transaction.id] || 0) >= 3;
+  if (receipt || failed) {
+    delete failedCounter[transaction.id];
 
-  await db.markTransactionProcessed(transaction.id);
+    await db.markTransactionProcessed(transaction.id, { failed });
+  }
 }
 
 export async function registeredTransactionsLoop() {
