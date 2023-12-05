@@ -16,10 +16,10 @@ const clientsMap = new Map<
 >();
 
 function getProvider(chainId: string) {
-  const networkName = chainId === constants.StarknetChainId.SN_MAIN ? 'SN_MAIN' : 'SN_GOERLI';
+  const networkName = chainId === constants.StarknetChainId.SN_MAIN ? 'mainnet' : 'goerli';
 
   return new RpcProvider({
-    nodeUrl: networkName
+    nodeUrl: `https://starknet-${networkName}.infura.io/v3/${process.env.INFURA_API_KEY}`
   });
 }
 
