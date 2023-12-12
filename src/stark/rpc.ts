@@ -62,6 +62,19 @@ export const createNetworkHandler = (chainId: string) => {
     try {
       const { l1TokenAddress, strategyAddress, snapshotTimestamp } = params;
 
+      const alreadyRegistered = await db.getProposal(
+        `${chainId}-${l1TokenAddress}-${strategyAddress}-${snapshotTimestamp}`
+      );
+      if (alreadyRegistered) {
+        return rpcSuccess(
+          res,
+          {
+            alreadyRegistered: true
+          },
+          id
+        );
+      }
+
       console.log('Registering proposal', l1TokenAddress, strategyAddress, snapshotTimestamp);
 
       const result = await herodotus.registerProposal({
@@ -70,6 +83,10 @@ export const createNetworkHandler = (chainId: string) => {
         strategyAddress,
         snapshotTimestamp
       });
+
+      await db.registerProposal(
+        `${chainId}-${l1TokenAddress}-${strategyAddress}-${snapshotTimestamp}`
+      );
 
       return rpcSuccess(res, result, id);
     } catch (e) {
