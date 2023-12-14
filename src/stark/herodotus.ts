@@ -69,7 +69,7 @@ export async function registerProposal({
 
   const result = await res.json();
 
-  console.log('herodotus internalId', result, result.internalId);
+  console.log('herodotus internalId', result.internalId);
 
   return result;
 }
