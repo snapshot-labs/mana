@@ -52,9 +52,9 @@ export async function registerProposal({
   } else {
     console.log('WARN! webhooks disabled');
     console.log('you will need to manually inform server about new storage root being accepted');
-    console.log('by visting this URL:');
-    console.log(webhookUrl);
   }
+
+  console.log('Webhook URL', webhookUrl);
 
   const res = await fetch(
     `https://api.herodotus.cloud/submit-batch-query?apiKey=${process.env.HERODOTUS_API_KEY}`,
