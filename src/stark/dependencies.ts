@@ -14,7 +14,7 @@ export function getProvider(chainId: string) {
   return new RpcProvider({ nodeUrl });
 }
 
-export function getStarknetAccount(provider: RpcProvider, mnemonic: string, index: number) {
+export function getStarknetAccount(mnemonic: string, index: number) {
   const masterSeed = bip39.mnemonicToSeedSync(mnemonic);
   const hdKey1 = bip32.HDKey.fromMasterSeed(masterSeed).derive("m/44'/60'/0'/0/0");
   const hdKey2 = bip32.HDKey.fromMasterSeed(hdKey1.privateKey!);
@@ -32,11 +32,11 @@ export function getStarknetAccount(provider: RpcProvider, mnemonic: string, inde
     0
   );
 
-  return new Account(provider, address, `0x${privateKey}`);
+  return { address, privateKey: `0x${privateKey}` };
 }
 
-const addressIndicies = {
-  // NOTE: starts with 2 because is 1 is default index (0 is old account that is not consistent with new derivation path)
+export const DEFAULT_INDEX = 1;
+export const SPACES_INDICIES = {
   '0x040e337fb53973b08343ce983369c1d9e6249ba011e929347288e4d8b590d048': 2
 };
 
@@ -46,8 +46,10 @@ export function createAccountProxy(mnemonic: string, provider: RpcProvider) {
   return (spaceAddress: string) => {
     const normalizedSpaceAddress = validateAndParseAddress(spaceAddress);
     if (!accounts.has(normalizedSpaceAddress)) {
-      const index = addressIndicies[normalizedSpaceAddress] || 1;
-      accounts.set(normalizedSpaceAddress, getStarknetAccount(provider, mnemonic, index));
+      const index = SPACES_INDICIES[normalizedSpaceAddress] || DEFAULT_INDEX;
+      const { address, privateKey } = getStarknetAccount(mnemonic, index);
+
+      accounts.set(normalizedSpaceAddress, new Account(provider, address, privateKey));
     }
 
     return accounts.get(normalizedSpaceAddress) as Account;
