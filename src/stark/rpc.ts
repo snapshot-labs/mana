@@ -84,10 +84,6 @@ export const createNetworkHandler = (chainId: string) => {
         snapshotTimestamp
       });
 
-      await db.registerProposal(
-        `${chainId}-${l1TokenAddress}-${strategyAddress}-${snapshotTimestamp}`
-      );
-
       return rpcSuccess(res, result, id);
     } catch (e) {
       console.log('Failed', e);

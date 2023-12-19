@@ -24,6 +24,11 @@ export async function createTables() {
   await knex.schema.createTable(REGISTERED_PROPOSALS, t => {
     t.string('id').primary();
     t.timestamps(true, true);
+    t.string('chainId');
+    t.integer('timestamp');
+    t.string('strategyAddress');
+    t.string('herodotusId');
+    t.boolean('processed').defaultTo(false).index();
   });
 }
 
@@ -52,8 +57,24 @@ export async function markOldTransactionsAsProcessed() {
     .whereRaw("created_at < now() - interval '1 day'");
 }
 
-export async function registerProposal(id: string) {
-  return knex(REGISTERED_PROPOSALS).insert({ id });
+export async function registerProposal(
+  id: string,
+  proposal: { chainId: string; timestamp: number; strategyAddress: string; herodotusId: string }
+) {
+  return knex(REGISTERED_PROPOSALS).insert({
+    id,
+    ...proposal
+  });
+}
+
+export async function getProposalsToProcess() {
+  return knex(REGISTERED_PROPOSALS).select('*').where({ processed: false });
+}
+
+export async function markProposalProcessed(id: string) {
+  return knex(REGISTERED_PROPOSALS)
+    .update({ updated_at: knex.fn.now(), processed: true })
+    .where({ id });
 }
 
 export async function getProposal(id: string) {
