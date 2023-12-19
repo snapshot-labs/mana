@@ -7,29 +7,30 @@ export async function createTables() {
   const registeredTransactionsTableExists = await knex.schema.hasTable(REGISTERED_TRANSACTIONS);
   const registeredProposalsTableExists = await knex.schema.hasTable(REGISTERED_PROPOSALS);
 
-  if (registeredTransactionsTableExists) await knex.schema.dropTable(REGISTERED_TRANSACTIONS);
-  if (registeredProposalsTableExists) await knex.schema.dropTable(REGISTERED_PROPOSALS);
+  if (!registeredTransactionsTableExists) {
+    await knex.schema.createTable(REGISTERED_TRANSACTIONS, t => {
+      t.increments('id').primary();
+      t.timestamps(true, true);
+      t.boolean('processed').defaultTo(false).index();
+      t.boolean('failed').defaultTo(false).index();
+      t.string('network').index();
+      t.string('type').index();
+      t.string('hash');
+      t.json('data');
+    });
+  }
 
-  await knex.schema.createTable(REGISTERED_TRANSACTIONS, t => {
-    t.increments('id').primary();
-    t.timestamps(true, true);
-    t.boolean('processed').defaultTo(false).index();
-    t.boolean('failed').defaultTo(false).index();
-    t.string('network').index();
-    t.string('type').index();
-    t.string('hash');
-    t.json('data');
-  });
-
-  await knex.schema.createTable(REGISTERED_PROPOSALS, t => {
-    t.string('id').primary();
-    t.timestamps(true, true);
-    t.string('chainId');
-    t.integer('timestamp');
-    t.string('strategyAddress');
-    t.string('herodotusId');
-    t.boolean('processed').defaultTo(false).index();
-  });
+  if (!registeredProposalsTableExists) {
+    await knex.schema.createTable(REGISTERED_PROPOSALS, t => {
+      t.string('id').primary();
+      t.timestamps(true, true);
+      t.string('chainId');
+      t.integer('timestamp');
+      t.string('strategyAddress');
+      t.string('herodotusId');
+      t.boolean('processed').defaultTo(false).index();
+    });
+  }
 }
 
 export async function registerTransaction(network: string, type: string, hash: string, data: any) {
