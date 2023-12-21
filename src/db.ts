@@ -60,12 +60,23 @@ export async function markOldTransactionsAsProcessed() {
 
 export async function registerProposal(
   id: string,
-  proposal: { chainId: string; timestamp: number; strategyAddress: string; herodotusId: string }
+  proposal: {
+    chainId: string;
+    timestamp: number;
+    strategyAddress: string;
+    herodotusId: string | null;
+  }
 ) {
   return knex(REGISTERED_PROPOSALS).insert({
     id,
     ...proposal
   });
+}
+
+export async function updateProposal(id: string, proposal: { herodotusId: string }) {
+  return knex(REGISTERED_PROPOSALS)
+    .update({ updated_at: knex.fn.now(), ...proposal })
+    .where({ id });
 }
 
 export async function getProposalsToProcess() {

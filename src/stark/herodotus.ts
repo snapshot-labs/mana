@@ -8,13 +8,24 @@ const HERODOTUS_API_KEY = process.env.HERODOTUS_API_KEY || '';
 
 const controller = new clients.HerodotusController();
 
-type Proposal = {
+type ApiProposal = {
+  chainId: string;
+  l1TokenAddress: string;
+  timestamp: number;
+  strategyAddress: string;
+};
+
+type DbProposal = {
   id: string;
   chainId: string;
   timestamp: number;
   strategyAddress: string;
-  herodotusId: string;
+  herodotusId: string | null;
 };
+
+function getId(proposal: ApiProposal) {
+  return `${proposal.chainId}-${proposal.l1TokenAddress}-${proposal.strategyAddress}-${proposal.timestamp}`;
+}
 
 async function getStatus(id: string) {
   const res = await fetch(
@@ -26,29 +37,15 @@ async function getStatus(id: string) {
   return queryStatus;
 }
 
-export async function registerProposal({
-  chainId,
-  l1TokenAddress,
-  strategyAddress,
-  snapshotTimestamp
-}: {
-  chainId: string;
-  l1TokenAddress: string;
-  strategyAddress: string;
-  snapshotTimestamp: number;
-}) {
-  if (chainId !== constants.StarknetChainId.SN_GOERLI) {
-    throw new Error('Only Starknet goerli is supported');
-  }
-
+async function submitBatch(proposal: ApiProposal) {
   const body: any = {
     destinationChainId: 'SN_GOERLI',
     fee: '0',
     data: {
       '5': {
-        [`timestamp:${snapshotTimestamp}`]: {
+        [`timestamp:${proposal.timestamp}`]: {
           accounts: {
-            [l1TokenAddress]: {
+            [proposal.l1TokenAddress]: {
               props: ['STORAGE_ROOT']
             }
           }
@@ -70,22 +67,48 @@ export async function registerProposal({
 
   const result = await res.json();
 
-  console.log('herodotus internalId', result, result.internalId);
+  if (!result.internalId) {
+    throw new Error('registration failed');
+  }
 
-  await db.registerProposal(
-    `${chainId}-${l1TokenAddress}-${strategyAddress}-${snapshotTimestamp}`,
-    {
-      chainId,
-      timestamp: snapshotTimestamp,
-      strategyAddress,
-      herodotusId: result.internalId
-    }
-  );
+  console.log('herodotus internalId', result.internalId);
 
-  return result;
+  await db.updateProposal(getId(proposal), {
+    herodotusId: result.internalId
+  });
 }
 
-export async function processProposal(proposal: Proposal) {
+export async function registerProposal(proposal: ApiProposal) {
+  if (proposal.chainId !== constants.StarknetChainId.SN_GOERLI) {
+    throw new Error('Only Starknet goerli is supported');
+  }
+
+  await db.registerProposal(getId(proposal), {
+    chainId: proposal.chainId,
+    timestamp: proposal.timestamp,
+    strategyAddress: proposal.strategyAddress,
+    herodotusId: null
+  });
+
+  try {
+    await submitBatch(proposal);
+  } catch (e) {
+    console.log('failed to submit batch', e);
+  }
+}
+
+export async function processProposal(proposal: DbProposal) {
+  if (!proposal.herodotusId) {
+    const [, l1TokenAddress] = proposal.id.split('-');
+
+    await submitBatch({
+      ...proposal,
+      l1TokenAddress
+    });
+
+    return;
+  }
+
   const status = await getStatus(proposal.herodotusId);
   if (status !== 'DONE') {
     console.log('proposal is not ready yet', proposal.herodotusId, status);
