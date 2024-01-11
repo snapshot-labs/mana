@@ -26,8 +26,6 @@ export const createNetworkHandler = (chainId: string) => {
         await nonceManager.acquire();
         const nonce = await nonceManager.getNonce();
 
-        console.log('nonce', nonce);
-
         if (primaryType === 'Propose') {
           console.log('Propose');
           receipt = await client.propose(account, params.envelope, { nonce });

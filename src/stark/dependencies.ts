@@ -42,20 +42,21 @@ export const SPACES_INDICIES = {
 };
 
 export function createAccountProxy(mnemonic: string, provider: RpcProvider) {
-  const accounts = new Map<string, { account: Account; nonceManager: NonceManager }>();
+  const accounts = new Map<number, { account: Account; nonceManager: NonceManager }>();
 
   return (spaceAddress: string) => {
     const normalizedSpaceAddress = validateAndParseAddress(spaceAddress);
-    if (!accounts.has(normalizedSpaceAddress)) {
-      const index = SPACES_INDICIES[normalizedSpaceAddress] || DEFAULT_INDEX;
+    const index = SPACES_INDICIES[normalizedSpaceAddress] || DEFAULT_INDEX;
+
+    if (!accounts.has(index)) {
       const { address, privateKey } = getStarknetAccount(mnemonic, index);
 
       const account = new Account(provider, address, privateKey);
       const nonceManager = new NonceManager(account);
 
-      accounts.set(normalizedSpaceAddress, { account, nonceManager });
+      accounts.set(index, { account, nonceManager });
     }
 
-    return accounts.get(normalizedSpaceAddress)!;
+    return accounts.get(index)!;
   };
 }
